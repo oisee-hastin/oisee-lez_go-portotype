@@ -1,0 +1,13 @@
+@media screen {
+     body {
+          background-color: #ccc;
+          margin: 0;
+          border: 1px solid #ccc;
+     }
+}
+
+@media print {
+     body {
+          margin: 0;
+     }
+}
