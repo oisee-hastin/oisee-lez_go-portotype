@@ -217,7 +217,7 @@ document.addEventListener("DOMContentLoaded", readInDatabase);
 function readInDatabase() {
      console.log("reading");
      // localStorage.clear();
-     if (localStorage.articleDatabaseAry && localStorage.packageDatabaseAry) {
+     if (localStorage.articleDatabaseAry && localStorage.packageDatabaseAry && localStorage.departmentDatabaseAry) {
           console.log(localStorage.packageDatabaseAry);
           articleDatabaseAry = JSON.parse(localStorage.articleDatabaseAry);
           packageDatabaseAry = JSON.parse(localStorage.packageDatabaseAry);
@@ -233,7 +233,11 @@ function readInDatabase() {
           .then((data) => {
                console.log(data);
                let needToUpdate = false;
-               if (JSON.stringify(articleDatabaseAry) != JSON.stringify(data.data[0]) || JSON.stringify(packageDatabaseAry) != JSON.stringify(data.data[1])) {
+               if (
+                    JSON.stringify(articleDatabaseAry) != JSON.stringify(data.data[0]) ||
+                    JSON.stringify(packageDatabaseAry) != JSON.stringify(data.data[1]) ||
+                    JSON.stringify(departmentDatabaseAry) != JSON.stringify(data.data[2])
+               ) {
                     needToUpdate = true;
                }
                articleDatabaseAry = data.data[0];
@@ -259,7 +263,7 @@ function readInDatabase() {
 function init() {
      try {
           let originalComponent = document.querySelector(".left-column").querySelectorAll(".component");
-          console.log(originalComponent);
+          // console.log(originalComponent);
           originalComponent.forEach((e) => {
                e.remove();
           });
