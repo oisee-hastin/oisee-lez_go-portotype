@@ -1,5 +1,6 @@
 // const previewContainer = document.querySelector(".preview-container");
 
+const departmentArea = document.querySelector(".department-area");
 const componentArea = document.querySelector(".component-area");
 const packageArea = document.querySelector(".package-area");
 const previewArea = document.querySelector(".preview-area");
@@ -100,6 +101,7 @@ function addComponentToPreview(component) {
 }
 
 const printBtn = document.querySelector("#print-btn");
+const resetBtn = document.querySelector("#reset-btn");
 
 // // 將文章元件加入預覽區
 // function addComponentToPreview(component) {
@@ -131,6 +133,34 @@ packageArea.addEventListener("click", (event) => {
           for (let i = 0; i < addingObj_component_ids.length; i++) {
                document.querySelector('[data-uniqueid="' + addingObj_component_ids[i] + '"]').click();
           }
+     }
+});
+departmentArea.addEventListener("click", (event) => {
+     const component = event.target.closest(".department");
+     if (component) {
+          let departDivs = departmentArea.querySelectorAll(".component");
+          departDivs.forEach((e) => {
+               e.classList.remove("selectedDepartment");
+          });
+
+          component.classList.add("selectedDepartment");
+          let packageDivs = packageArea.querySelectorAll(".component");
+
+          packageDivs.forEach((e) => {
+               if (e.dataset.department == component.dataset.department) {
+                    e.hidden = false;
+               } else {
+                    e.hidden = true;
+               }
+          });
+          let componentDivs = componentArea.querySelectorAll(".component");
+          componentDivs.forEach((e) => {
+               if (e.dataset.department == component.dataset.department) {
+                    e.hidden = false;
+               } else {
+                    e.hidden = true;
+               }
+          });
      }
 });
 // componentArea.addEventListener("click", (event) => {
@@ -177,9 +207,12 @@ printBtn.addEventListener("click", () => {
      // // 移除iframe
      // //   document.body.removeChild(iframe);
 });
+resetBtn.addEventListener("click", () => {
+     previewArea.innerHTML = "";
+});
 
 //databse reading
-const dataSheetUrl = "https://script.google.com/macros/s/AKfycbzeE7CiucTv3PlBtZMsrjgjgMaaqrqXR9Ei7FTmI9keUZsXY4J_Ibi_-_6rprFD1nqYyg/exec";
+const dataSheetUrl = "https://script.google.com/macros/s/AKfycbzVTr_Gjy0E6nQAB8akkOupp9LLhnl06fKmLVPWwcDdEvKYV-HWUb3xWRXVNx1jxpPppA/exec";
 document.addEventListener("DOMContentLoaded", readInDatabase);
 function readInDatabase() {
      console.log("reading");
@@ -188,6 +221,7 @@ function readInDatabase() {
           console.log(localStorage.packageDatabaseAry);
           articleDatabaseAry = JSON.parse(localStorage.articleDatabaseAry);
           packageDatabaseAry = JSON.parse(localStorage.packageDatabaseAry);
+          departmentDatabaseAry = JSON.parse(localStorage.departmentDatabaseAry);
           init();
           // createArticleDatabase(articleDatabaseAry);
           // createPackages(packageDatabaseAry);
@@ -197,14 +231,17 @@ function readInDatabase() {
                return res.json();
           })
           .then((data) => {
+               console.log(data);
                let needToUpdate = false;
                if (JSON.stringify(articleDatabaseAry) != JSON.stringify(data.data[0]) || JSON.stringify(packageDatabaseAry) != JSON.stringify(data.data[1])) {
                     needToUpdate = true;
                }
                articleDatabaseAry = data.data[0];
                packageDatabaseAry = data.data[1];
+               departmentDatabaseAry = data.data[2];
                localStorage.articleDatabaseAry = JSON.stringify(articleDatabaseAry);
                localStorage.packageDatabaseAry = JSON.stringify(packageDatabaseAry);
+               localStorage.departmentDatabaseAry = JSON.stringify(departmentDatabaseAry);
                if (needToUpdate) {
                     init();
                }
@@ -220,20 +257,39 @@ function readInDatabase() {
 }
 
 function init() {
-     let originalComponent = document.querySelector(".left-column").querySelectorAll(".component");
-     console.log(originalComponent);
-     originalComponent.forEach((e) => {
-          e.remove();
-     });
+     try {
+          let originalComponent = document.querySelector(".left-column").querySelectorAll(".component");
+          console.log(originalComponent);
+          originalComponent.forEach((e) => {
+               e.remove();
+          });
 
-     createArticleDatabase(articleDatabaseAry);
-     createPackages(packageDatabaseAry);
-     const loader = document.querySelectorAll(".loader");
-     loader.forEach((e) => {
-          e.remove();
-     });
+          createArticleDatabase(articleDatabaseAry);
+          createPackages(packageDatabaseAry);
+          createDepartments(departmentDatabaseAry);
+          const loader = document.querySelectorAll(".loader");
+          loader.forEach((e) => {
+               e.remove();
+          });
+     } catch (err) {
+          console.log("Err at line " + err.line + "\n " + err);
+          localStorage.clear();
+     }
 }
 
+function createDepartments(departmentData) {
+     departmentData.forEach((element) => {
+          let newDepartmentComponent = document.createElement("div");
+          newDepartmentComponent.classList = "component btn-component department";
+          departmentArea.appendChild(newDepartmentComponent);
+          let newDepartmentTitle = document.createElement("h3");
+          newDepartmentTitle.innerText = element.department;
+          newDepartmentComponent.appendChild(newDepartmentTitle);
+          // departmentArea.appendChild(newdepartmentComponent);
+          // newdepartmentComponent.innerText = element.department_title;
+          newDepartmentComponent.dataset.department = element.department;
+     });
+}
 function createPackages(packageData) {
      packageData.forEach((element) => {
           let newPackageComponent = document.createElement("div");
@@ -257,6 +313,7 @@ function createPackages(packageData) {
           // packageArea.appendChild(newPackageComponent);
           // newPackageComponent.innerText = element.package_title;
           newPackageComponent.dataset.package_title = element.package_title;
+          newPackageComponent.dataset.department = element.department;
      });
 }
 
@@ -271,6 +328,7 @@ function createArticleDatabase(articleData) {
           newArticleTitle.innerText = element.title;
           newArticleComponent.appendChild(newArticleTitle);
           newArticleComponent.dataset.uniqueid = element.uniqueid;
+          newArticleComponent.dataset.department = element.department;
 
           // let newArticleContent = document.createElement("p");
           // let tmpHtml = "";
