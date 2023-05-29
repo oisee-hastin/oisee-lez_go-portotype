@@ -1,19 +1,47 @@
 @media screen, print {
      body {
-          font-family: "Arial", sans-serif;
+          font-family: sans-serif, "Arial";
           line-height: 1.6;
+          font-size: 16px;
+     }
+     nav {
+          background-color: #29abe2;
+     }
+
+     nav * {
+          color: #fff;
      }
 
      button {
           padding: 2px 3px;
      }
-
+     .container-xxl {
+          max-width: 1320px;
+          /* overflow: hidden; */
+     }
      .container {
           display: flex;
           flex-direction: row;
           justify-content: space-between;
           align-items: flex-start;
           margin: 0 auto;
+     }
+     .heightPrserve {
+          height: 5vh;
+     }
+     .card {
+          box-shadow: 00px 5px 10px 5px rgba(0, 0, 0, 0.1);
+     }
+     .card-header {
+          color: #fff;
+          font-weight: 800;
+          background-color: #29abe2;
+          padding-top: 16px;
+          padding-bottom: 12px;
+     }
+     .card-body {
+          scroll-behavior: auto;
+          overflow: auto;
      }
 
      .preview-area {
@@ -24,34 +52,34 @@
           border: 1px solid #ccc;
           box-sizing: border-box;
           background: repeating-linear-gradient(to right, white, white 10px, transparent 10px, transparent 20px),
-               repeating-linear-gradient(transparent, transparent calc(297mm - 1px), #ddd calc(297mm - 1px), #ddd calc(297mm + 1px), transparent calc(297mm + 1px));
+               repeating-linear-gradient(transparent, transparent calc((297mm - 1px)), #ddd calc((297mm - 1px)), #ddd calc((297mm + 1px)), transparent calc((297mm + 1px)));
      }
      @page {
           size: A4 portrait;
           margin: 20mm 0;
      }
      .left-column {
-          width: 300px;
+          width: 30vw;
+          max-width: 400px;
      }
      .right-container {
-          height: calc(100vh - 16px);
+          height: calc(100vh - 48px);
           overflow: auto;
-          padding: 0px 20px;
+          padding: 0 20px;
      }
      .component-holder {
-          padding: 20px;
+          /* padding: 20px;
           padding-top: 0px;
-          border: 1px solid #ccc;
+          border: 1px solid #ccc; */
           width: 100%;
-          height: 20vh;
           font-size: small;
-          scroll-behavior: auto;
-          overflow: auto;
           position: relative;
+          margin: 30px 0;
      }
 
      .component-area {
           height: 50vh;
+
           /* scroll-behavior: auto;
           overflow: auto; */
      }
@@ -93,7 +121,23 @@
           margin-block-end: 0;
      }
      h3 {
-          font-size: 1.2rem;
+          font-size: 1rem;
+          font-weight: 800;
+          padding-bottom: 0.2rem;
+     }
+
+     .previewComponent p,
+     ul,
+     ol {
+          font-size: 1rem;
+          margin-bottom: 0px;
+     }
+     .previewComponent h3 {
+          font-size: 1.25rem;
+     }
+     .article-content-data-preview {
+          margin-bottom: 0px;
+          color: rgba(0, 0, 0, 0.4);
      }
      /* .delete-button {
           position: absolute;
@@ -108,6 +152,7 @@
           border: none;
           border-radius: 2px;
           position: absolute;
+          padding: 0;
           top: 0;
           right: 0;
           margin: 0.2rem;
@@ -122,8 +167,16 @@
      }
 
      .previewComponent {
+          padding: 20px;
           cursor: grab;
      }
+     .preview-container {
+          width: 100%;
+          height: 100%;
+          transform: scale(var(--scaleFactor));
+          transform-origin: top center;
+     }
+
      .loader {
           border: 5px solid #f3f3f3; /* Light grey */
           border-top: 5px solid #3498db; /* Blue */
@@ -155,12 +208,36 @@
           color: white;
           background-color: #3498db;
      }
+
+     ::-webkit-scrollbar {
+          width: 5px;
+          margin-right: 3px;
+     }
+
+     ::-webkit-scrollbar-track {
+          margin: 3px;
+          padding: 2px;
+     }
+
+     ::-webkit-scrollbar-thumb {
+          box-sizing: border-box;
+          border-radius: 5px;
+          border: 0px solid rgba(0, 0, 0, 0.1);
+          background-color: rgba(0, 0, 0, 0.1);
+     }
 }
 
 @media screen {
+     body {
+          overflow: hidden;
+     }
+     :root {
+          --scaleFactor: 0.75;
+     }
      .preview-area {
           border: 1px solid #ccc;
           background-color: #fff;
+          box-shadow: 00px 5px 6px 3px rgba(0, 0, 0, 0.1);
      }
      .print-preview-BG {
           background-color: #ccc;
@@ -174,11 +251,17 @@
 }
 
 @media print {
-     body * {
-          display: none;
+     body {
+          overflow: auto;
      }
+     :root {
+          --scaleFactor: 1;
+     }
+     /* body * {
+          display: none;
+     } */
 
-     .preview-container,
+     /* .preview-container,
      .preview-area,
      .preview-area * {
           display: block !important;
@@ -186,7 +269,7 @@
 
      .delete-button {
           display: none !important;
-     }
+     } */
 
      .preview-area {
           background-color: #fff;
@@ -194,5 +277,10 @@
      }
      .print-preview-BG {
           background-color: #ccc;
+     }
+
+     ul,
+     ol {
+          list-style: initial !important;
      }
 }

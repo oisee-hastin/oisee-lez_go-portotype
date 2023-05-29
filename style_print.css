@@ -3,11 +3,18 @@
           background-color: #ccc;
           margin: 0;
           border: 1px solid #ccc;
+          overflow: auto;
+     }
+     .previewComponent {
+          cursor: auto;
      }
 }
 
 @media print {
      body {
           margin: 0;
+     }
+     .preview-area {
+          background: white;
      }
 }
