@@ -10,7 +10,7 @@ let previewComponents = [];
 
 let articleDatabaseAry = [];
 let packageDatabaseAry = [];
-const A4Height = previewArea.getBoundingClientRect().height; // A4 纸张高度，单位为毫米
+const A4Height = previewArea.getBoundingClientRect().height / scaleFactor; // A4 纸张高度，单位为毫米
 let currentHeight = 0; // 获取当前预览区域的高度
 
 // console.log("A4 height = " + A4Height);
@@ -77,28 +77,47 @@ function addComponentToPreview(component) {
      });
 
      deleteBtn.addEventListener("click", function () {
+          componentArea.querySelector("[data-uniqueid=" + component.dataset.uniqueid + "]").classList.remove("usedComponent");
           component.remove();
+          checkPackUsed();
+          adjustPreviewHeight();
      });
 
-     let newEle = previewArea.appendChild(component);
-     requestAnimationFrame(() => {
-          // console.log(component.offsetHeight);
-          // console.log(component);
-          const componentHeight = component.offsetHeight; //
-          currentHeight += componentHeight; // 更新当前预览区域的高度
-          const totalHeight = currentHeight + componentHeight; // 计算当前预览区域的总高度
-          // console.log("currentHeight = " + currentHeight);
-          // console.log("componentHeight = " + componentHeight);
-          // console.log("totalHeight = " + totalHeight);
-          if (totalHeight > A4Height) {
-               // 如果当前预览区域的总高度超过了 A4 纸张的高度，则更新原始预览区域的高度，并添加分界线
-               previewArea.style.height = `${Math.ceil(totalHeight / A4Height) * A4Height}px`;
-               // console.log(Math.ceil(totalHeight / A4Height) * A4Height);
-               const boundaryLine = document.createElement("div");
-               boundaryLine.classList.add("boundary-line");
-               previewArea.appendChild(boundaryLine);
+     previewArea.appendChild(component);
+     checkPackUsed();
+     adjustPreviewHeight();
+}
+
+function checkPackUsed() {
+     packageDatabaseAry.forEach((e) => {
+          let packArticleAry = e.component_ids.split(/,[ ]*/);
+          let matched = true;
+          packArticleAry.forEach((k) => {
+               if (!previewArea.querySelector("[data-uniqueid=" + k + "]")) {
+                    matched = false;
+                    return;
+               }
+          });
+          if (matched) {
+               document.querySelector("[data-package_title=" + e.package_title + "]").classList.add("usedComponent");
+          } else {
+               document.querySelector("[data-package_title=" + e.package_title + "]").classList.remove("usedComponent");
           }
      });
+}
+
+function adjustPreviewHeight() {
+     let allPreviewComponent = previewArea.querySelectorAll(".previewComponent");
+     let totalHeight = 0;
+     allPreviewComponent.forEach((e) => {
+          totalHeight += e.offsetHeight + 20;
+     });
+
+     previewArea.style.height = `${Math.ceil(totalHeight / A4Height) * A4Height}px`;
+     // console.log();
+     // console.log(previewArea.style.height * scaleFactor);
+     // console.log(document.querySelector(".preview-container").style.height);
+     document.querySelector(".preview-container").style.height = Number(previewArea.style.height.match(/[0-9.]*/)) * scaleFactor + "px";
 }
 
 const printBtn = document.querySelector("#print-btn");
@@ -112,7 +131,10 @@ const resetBtn = document.querySelector("#reset-btn");
 // 監聽文章元件點擊事件，將元件加入預覽區
 componentArea.addEventListener("click", (event) => {
      const component = event.target.closest(".component");
-     if (component) {
+     if (component && !previewArea.querySelector("[data-uniqueid=" + component.dataset.uniqueid + "]")) {
+          component.dataset.used = true;
+          component.disable = true;
+          component.classList.add("usedComponent");
           const uniqueid = component.dataset.uniqueid;
           const newComponent = document.createElement("div");
           newComponent.classList.add("component");
@@ -166,16 +188,6 @@ departmentArea.addEventListener("click", (event) => {
           });
      }
 });
-// componentArea.addEventListener("click", (event) => {
-//      if (event.target.matches(".component")) {
-//           const componentType = event.target.dataset.componentType;
-//           const component = document.createElement("div");
-//           component.classList.add("component");
-//           component.dataset.componentType = componentType;
-//           component.innerHTML = event.target.innerHTML;
-//           addComponentToPreview(component);
-//      }
-// });
 
 // 列印預覽區
 printBtn.addEventListener("click", () => {
@@ -187,33 +199,12 @@ printBtn.addEventListener("click", () => {
      printWindow.document.write(previewArea.outerHTML);
      printWindow.document.write("</body></html>");
      printWindow.document.close();
-     // printWindow.addEventListener("DOMContentLoaded", console.log("A"));
-     // printWindow.document.addEventListener("DOMContentLoaded", printWindow.print());
      printWindow.print();
-     // // 建立一個iframe
-     // const iframe = document.createElement("iframe");
-     // // iframe.style.display = "none";
-     // document.body.appendChild(iframe);
-     // const iframeDoc = iframe.contentDocument;
-
-     // // 將預覽區的內容複製到iframe中
-     // const previewContentClone = previewContent.cloneNode(true);
-     // iframeDoc.body.appendChild(previewContentClone);
-
-     // // 設定iframe的寬度和高度為A4大小
-     // iframeDoc.body.style.width = "210mm";
-     // iframeDoc.body.style.height = "297mm";
-
-     // // 建立一個新的window對象
-     // const win = iframe.contentWindow || iframe;
-     // // 使用window對象的print方法列印iframe中的內容
-     // win.print();
-
-     // // 移除iframe
-     // //   document.body.removeChild(iframe);
 });
 resetBtn.addEventListener("click", () => {
-     previewArea.innerHTML = "";
+     previewArea.querySelectorAll("button").forEach((e) => {
+          e.click();
+     });
 });
 
 //databse reading
@@ -223,7 +214,7 @@ function readInDatabase() {
      console.log("reading");
      // localStorage.clear();
      if (localStorage.articleDatabaseAry && localStorage.packageDatabaseAry && localStorage.departmentDatabaseAry) {
-          console.log(localStorage.packageDatabaseAry);
+          // console.log(localStorage.packageDatabaseAry);
           articleDatabaseAry = JSON.parse(localStorage.articleDatabaseAry);
           packageDatabaseAry = JSON.parse(localStorage.packageDatabaseAry);
           departmentDatabaseAry = JSON.parse(localStorage.departmentDatabaseAry);
@@ -254,21 +245,12 @@ function readInDatabase() {
                if (needToUpdate) {
                     init();
                }
-               // articleDatabaseAry = JSON.parse(testData).data[0];
-               // packageDatabaseAry = JSON.parse(testData).data[1];
-               // createArticleDatabase(articleDatabaseAry);
-               // createPackages(packageDatabaseAry);
-               //           console.log(articleDatabaseAry);
-
-               // console.log(loader);
-               // loader.remove();
           });
 }
 
 function init() {
      try {
           let originalComponent = document.querySelector(".left-column").querySelectorAll(".component");
-          // console.log(originalComponent);
           originalComponent.forEach((e) => {
                e.remove();
           });
@@ -288,7 +270,7 @@ function init() {
 
 function createDepartments(departmentData) {
      departmentData.forEach((element) => {
-          console.log(element.department);
+          // console.log(element.department);
           let newDepartmentComponent = document.createElement("li");
           newDepartmentComponent.classList = "";
           departmentList.appendChild(newDepartmentComponent);
@@ -326,6 +308,10 @@ function createPackages(packageData) {
           // newPackageComponent.innerText = element.package_title;
           newPackageComponent.dataset.package_title = element.package_title;
           newPackageComponent.dataset.department = element.department;
+          let newPackageContent = document.createElement("p");
+          newPackageContent.classList = "article-content-data-preview";
+          newPackageContent.innerText = articleTitles.join("、").length > 40 ? articleTitles.join("、").substr(0, 37) + "..." : articleTitles.join("、");
+          newPackageComponent.appendChild(newPackageContent);
      });
 }
 
