@@ -47,6 +47,10 @@ function addComponentToPreview(component) {
                // console.log(listing);
                if (listing) {
                     tmpHtml += "</" + listing + ">";
+               } else {
+                    if (i > 0) {
+                         tmpHtml += "<br>";
+                    }
                }
                listing = false;
                tmpHtml += tmpContentAry[i];

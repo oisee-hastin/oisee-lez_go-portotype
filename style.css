@@ -215,6 +215,9 @@
           height: 1rem;
           animation: spin 1.5s linear infinite;
      }
+     .longArticle {
+          padding-top: 1em;
+     }
      @keyframes spin {
           0% {
                transform: rotate(0deg);
