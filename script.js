@@ -152,11 +152,22 @@ packageArea.addEventListener("click", (event) => {
           let addingObj = packageDatabaseAry.find((obj) => {
                return obj.package_title === component.dataset.package_title;
           });
+
           let addingObj_component_ids = addingObj.component_ids.split(/,[ ]*/);
 
+          // if (addingObj_component_ids[0].slice(-2) == "00") {
+          //      let k = 1;
+          //      let articles = articleDatabaseAry.filter((e) => {
+          //           return e.uniqueid.match(addingObj_component_ids[0].substring(0, addingObj_component_ids[0].length - 2));
+          //      });
+          //      articles.forEach((e) => {
+          //           document.querySelector('[data-uniqueid="' + e.uniqueid + '"]').click();
+          //      });
+          // } else {
           for (let i = 0; i < addingObj_component_ids.length; i++) {
                document.querySelector('[data-uniqueid="' + addingObj_component_ids[i] + '"]').click();
           }
+          // }
      }
 });
 departmentArea.addEventListener("click", (event) => {
@@ -254,7 +265,7 @@ function init() {
           originalComponent.forEach((e) => {
                e.remove();
           });
-
+          departmentList.innerHTML = "";
           createArticleDatabase(articleDatabaseAry);
           createPackages(packageDatabaseAry);
           createDepartments(departmentDatabaseAry);
@@ -286,32 +297,48 @@ function createDepartments(departmentData) {
 }
 function createPackages(packageData) {
      packageData.forEach((element) => {
-          let newPackageComponent = document.createElement("div");
-          newPackageComponent.classList = "component btn-component package";
+          try {
+               let newPackageComponent = document.createElement("div");
+               newPackageComponent.classList = "component btn-component package";
+               let articleIds = [];
+               let articleTitles = [];
 
-          let articleComponentIDs = element.component_ids.split(/,[ ]*/);
-          let articleTitles = [];
-          for (let i = 0; i < articleComponentIDs.length; i++) {
-               let curEle = articleDatabaseAry.find((obj) => {
-                    return obj.uniqueid === articleComponentIDs[i];
-               });
-               articleTitles.push(curEle.title);
+               if (element.component_ids.slice(-2) == "00") {
+                    let articles = articleDatabaseAry.filter((e) => {
+                         return e.uniqueid.match(element.component_ids.substring(0, element.component_ids.length - 2));
+                    });
+                    articles.forEach((e) => {
+                         articleIds.push(e.uniqueid);
+                    });
+                    element.component_ids = articleIds.join(", ");
+               }
+
+               let articleComponentIDs = element.component_ids.split(/,[ ]*/);
+
+               for (let i = 0; i < articleComponentIDs.length; i++) {
+                    let curEle = articleDatabaseAry.find((obj) => {
+                         return obj.uniqueid === articleComponentIDs[i];
+                    });
+                    articleTitles.push(curEle.title);
+               }
+
+               newPackageComponent.title = articleTitles.join("、").replace(/[？?]、/g, "? ");
+
+               packageArea.appendChild(newPackageComponent);
+               let newArticleTitle = document.createElement("h3");
+               newArticleTitle.innerText = element.package_title;
+               newPackageComponent.appendChild(newArticleTitle);
+               // packageArea.appendChild(newPackageComponent);
+               // newPackageComponent.innerText = element.package_title;
+               newPackageComponent.dataset.package_title = element.package_title;
+               newPackageComponent.dataset.department = element.department;
+               let newPackageContent = document.createElement("p");
+               newPackageContent.classList = "article-content-data-preview";
+               newPackageContent.innerText = newPackageComponent.title.length > 25 ? newPackageComponent.title.substr(0, 22) + "..." : newPackageComponent.title;
+               newPackageComponent.appendChild(newPackageContent);
+          } catch (e) {
+               console.log(e + "\n" + e.line);
           }
-
-          newPackageComponent.title = articleTitles.join("、");
-
-          packageArea.appendChild(newPackageComponent);
-          let newArticleTitle = document.createElement("h3");
-          newArticleTitle.innerText = element.package_title;
-          newPackageComponent.appendChild(newArticleTitle);
-          // packageArea.appendChild(newPackageComponent);
-          // newPackageComponent.innerText = element.package_title;
-          newPackageComponent.dataset.package_title = element.package_title;
-          newPackageComponent.dataset.department = element.department;
-          let newPackageContent = document.createElement("p");
-          newPackageContent.classList = "article-content-data-preview";
-          newPackageContent.innerText = articleTitles.join("、").length > 40 ? articleTitles.join("、").substr(0, 37) + "..." : articleTitles.join("、");
-          newPackageComponent.appendChild(newPackageContent);
      });
 }
 

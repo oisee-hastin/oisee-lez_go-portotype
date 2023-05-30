@@ -27,7 +27,7 @@
           margin: 0 auto;
      }
      .heightPrserve {
-          height: 5vh;
+          height: 3vh;
      }
      .card {
           box-shadow: 00px 5px 10px 5px rgba(0, 0, 0, 0.1);
@@ -97,8 +97,8 @@
 
      .component {
           position: relative;
-          margin-bottom: 20px;
-          padding: 10px;
+          margin-bottom: 10px;
+          padding: 10px 10px 5px 10px;
           border: 1px solid #ccc;
           page-break-after: auto;
      }
@@ -189,7 +189,7 @@
 
      .preview-container {
           /* width: 100%; */
-          height: 100%;
+          height: calc(297mm * var(--scaleFactor));
           /* display: inline-block; */
           /* transform: scale(var(--scaleFactor)); */
           /* transform-origin: top center; */
