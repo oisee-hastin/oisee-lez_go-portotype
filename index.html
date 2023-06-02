@@ -31,16 +31,8 @@
                          <ul class="navbar-nav me-auto mb-2 mb-lg-0" data-bs-theme="light">
                               <li class="nav-item dropdown">
                                    <a class="nav-link dropdown-toggle" href="#" role="button" id="department-title" data-bs-toggle="dropdown" aria-expanded="false"> 選取分科 </a>
-                                   <ul class="dropdown-menu department-list">
-                                        <!-- <li><a class="dropdown-item" href="#">Action</a></li>
-                                        <li><a class="dropdown-item" href="#">Another action</a></li>
-                                        <li><hr class="dropdown-divider" /></li>
-                                        <li><a class="dropdown-item" href="#">Something else here</a></li> -->
-                                   </ul>
+                                   <ul class="dropdown-menu department-list"></ul>
                               </li>
-                              <!-- <li class="nav-item">
-                                   <a class="nav-link disabled">Disabled</a>
-                              </li> -->
                          </ul>
                          <form class="d-flex" role="search" data-bs-theme="light">
                               <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" disabled hidden />
@@ -75,26 +67,18 @@
 
           <div class="container-xxl">
                <div class="container">
-                    <div class="left-column py-2">
-                         <!-- <div class="component-holder department-area">
-                              <div class="sectionTitle">分科</div>
-                              <div class="loading">
-                                   <div class="loader"></div>
-                              </div>
-                         </div> -->
-                         <div class="card component-holder" style="height: 35vh">
+                    <div class="left-column py-2 accordion" id="accordionArticlePanel">
+                         <div class="" id="articleTreeContainer"></div>
+                         <div class="card component-holder" style="height: 35vh" hidden>
                               <h5 class="card-header">專科文章包</h5>
                               <div class="card-body package-area">
                                    <div class="loading">
                                         <div class="loader"></div>
-                                        <!-- <h5 class="card-title">Special title treatment</h5>
-						  <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-						  <a href="#" class="btn btn-primary">Go somewhere</a> -->
                                    </div>
                               </div>
                          </div>
 
-                         <div class="card component-holder" style="height: 45vh">
+                         <div class="card component-holder" style="height: 45vh" hidden>
                               <h5 class="card-header">衛教文章庫</h5>
                               <div class="card-body component-area">
                                    <div class="loading">
@@ -107,17 +91,11 @@
                          <div class="heightPrserve"></div>
                          <div class="preview-container">
                               <div class="preview-area">
-                                   <!-- <h2>預覽區</h2> -->
-                                   <!-- <div id="preview-content"></div> -->
+                                   <!-- 預覽區 -->
                               </div>
                          </div>
                          <div class="heightPrserve"></div>
                     </div>
-                    <!-- 
-                    <div>
-                         <button class="funcBtn" id="reset-btn">清空內容</button>
-                         <button class="funcBtn" id="print-btn">列印</button>
-                    </div> -->
                </div>
           </div>
           <script

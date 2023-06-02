@@ -1,10 +1,12 @@
 // const previewContainer = document.querySelector(".preview-container");
 const scaleFactor = 0.75;
+const leftColumn = document.querySelector("#articleTreeContainer");
 const departmentArea = document.querySelector(".department-area");
 const departmentList = document.querySelector(".department-list");
 const componentArea = document.querySelector(".component-area");
 const packageArea = document.querySelector(".package-area");
 const previewArea = document.querySelector(".preview-area");
+let articleTreeObj = { type: "folder", parent: null, items: {} };
 // const component = document.querySelector(".component");
 let previewComponents = [];
 
@@ -26,12 +28,10 @@ function addComponentToPreview(component) {
      let addingObj = articleDatabaseAry.find((obj) => {
           return obj.uniqueid === component.dataset.uniqueid;
      });
-     // console.log(addingObj);
      let newArticleContent = document.createElement("p");
      let tmpHtml = "";
      let tmpContentAry = addingObj.content.split(/[\n\r\u0003]+/);
      let listing = false;
-     // console.log(tmpContentAry);
      for (let i = 0; i < tmpContentAry.length; i++) {
           if (tmpContentAry[i].substr(0, 1).match(/[▪①]/)) {
                if (!listing) {
@@ -44,7 +44,6 @@ function addComponentToPreview(component) {
                }
                tmpHtml += tmpContentAry[i].replace(/[▪①]/, "<li>") + "</li>";
           } else {
-               // console.log(listing);
                if (listing) {
                     tmpHtml += "</" + listing + ">";
                } else {
@@ -92,6 +91,90 @@ function addComponentToPreview(component) {
      adjustPreviewHeight();
 }
 
+function addArticleObjToPreview(articleObj) {
+     let newComponentEle = document.createElement("div");
+
+     newComponentEle.classList = "component btn-component previewComponent";
+     newComponentEle.title = articleObj.content;
+     let newArticleTitle = document.createElement("h3");
+     newArticleTitle.innerText = articleObj.title;
+     newComponentEle.appendChild(newArticleTitle);
+     newComponentEle.dataset.uniqueid = articleObj.uniqueid;
+     newComponentEle.dataset.department = articleObj.department;
+     newComponentEle.draggable = true;
+
+     previewComponents.push(newComponentEle);
+     newComponentEle.addEventListener("dragstart", () => {
+          // Adding dragging class to item after a delay
+          setTimeout(() => newComponentEle.classList.add("dragging"), 0);
+     });
+     // Removing dragging class from item on dragend event
+     newComponentEle.addEventListener("dragend", () => newComponentEle.classList.remove("dragging"));
+
+     // console.log(articleObj);
+     let newArticleContent = document.createElement("p");
+     let tmpHtml = "";
+     let tmpContentAry = articleObj.content.split(/[\n\r\u0003]+/);
+     let listing = false;
+     for (let i = 0; i < tmpContentAry.length; i++) {
+          if (tmpContentAry[i].substr(0, 1).match(/[▪①]/)) {
+               if (!listing) {
+                    if (tmpContentAry[i].substr(0, 1).match(/[▪]/)) {
+                         listing = "ul";
+                    } else if (tmpContentAry[i].substr(0, 1).match(/[①]/)) {
+                         listing = "ol";
+                    }
+                    tmpHtml += "<" + listing + ">";
+               }
+               tmpHtml += tmpContentAry[i].replace(/[▪①]/, "<li>") + "</li>";
+          } else {
+               if (listing) {
+                    tmpHtml += "</" + listing + ">";
+               } else {
+                    if (i > 0) {
+                         tmpHtml += "<br>";
+                    }
+               }
+               listing = false;
+               tmpHtml += tmpContentAry[i];
+          }
+          if (i == tmpContentAry.length - 1 && listing) {
+               tmpHtml += "</" + listing + ">";
+          }
+     }
+
+     newArticleContent.innerHTML = tmpHtml;
+     newComponentEle.appendChild(newArticleContent);
+
+     let deleteBtn = document.createElement("button");
+     deleteBtn.classList.add("delete-button");
+     deleteBtn.classList.add("btn");
+     deleteBtn.classList.add("btn-sm");
+     deleteBtn.classList.add("btn-danger");
+     deleteBtn.textContent = "X";
+     newComponentEle.appendChild(deleteBtn);
+
+     deleteBtn.style.display = "none";
+     newComponentEle.addEventListener("mouseenter", function () {
+          deleteBtn.style.display = "block";
+     });
+
+     newComponentEle.addEventListener("mouseleave", function () {
+          deleteBtn.style.display = "none";
+     });
+
+     deleteBtn.addEventListener("click", function () {
+          // componentArea.querySelector("[data-uniqueid=" + component.dataset.uniqueid + "]").classList.remove("usedComponent");
+          newComponentEle.remove();
+          checkPackUsed();
+          adjustPreviewHeight();
+     });
+
+     previewArea.appendChild(newComponentEle);
+     // checkPackUsed();
+     adjustPreviewHeight();
+}
+
 function checkPackUsed() {
      packageDatabaseAry.forEach((e) => {
           let packArticleAry = e.component_ids.split(/,[ ]*/);
@@ -118,21 +201,48 @@ function adjustPreviewHeight() {
      });
 
      previewArea.style.height = `${Math.ceil(totalHeight / A4Height) * A4Height}px`;
-     // console.log();
-     // console.log(previewArea.style.height * scaleFactor);
-     // console.log(document.querySelector(".preview-container").style.height);
      document.querySelector(".preview-container").style.height = Number(previewArea.style.height.match(/[0-9.]*/)) * scaleFactor + "px";
 }
 
 const printBtn = document.querySelector("#print-btn");
 const resetBtn = document.querySelector("#reset-btn");
 
-// // 將文章元件加入預覽區
-// function addComponentToPreview(component) {
-//      previewArea.appendChild(component.cloneNode(true));
-// }
-
 // 監聽文章元件點擊事件，將元件加入預覽區
+
+leftColumn.addEventListener("dragstart", (e) => {
+     e.preventDefault();
+     const componentEle = e.target.closest(".component");
+     // console.log(e.target);
+     // console.log(componentEle);
+     if (componentEle.dataset.type == "folder") {
+          let uniqueidAry = componentEle.dataset.uniqueid.split("_");
+          let folderObj = articleTreeObj;
+
+          console.log(uniqueidAry);
+          for (let i = 0; i < uniqueidAry.length; i++) {
+               console.log(folderObj);
+               folderObj = folderObj.items[uniqueidAry[i]];
+          }
+
+          // console.log(folderObj);
+          addAricleFolderObj(folderObj);
+          function addAricleFolderObj(folderObj) {
+               Object.values(folderObj.items).forEach((e) => {
+                    if (e.type == "article") {
+                         addArticleObjToPreview(e);
+                    } else if (e.type == "folder") {
+                         addAricleFolderObj(e);
+                    }
+               });
+          }
+     } else if (componentEle.dataset.type == "article") {
+          let articleObj = articleDatabaseAry.find(function (e) {
+               return e.uniqueid == componentEle.dataset.uniqueid;
+          });
+          addArticleObjToPreview(articleObj);
+     }
+});
+
 componentArea.addEventListener("click", (event) => {
      const component = event.target.closest(".component");
      if (component && !previewArea.querySelector("[data-uniqueid=" + component.dataset.uniqueid + "]")) {
@@ -159,31 +269,18 @@ packageArea.addEventListener("click", (event) => {
 
           let addingObj_component_ids = addingObj.component_ids.split(/,[ ]*/);
 
-          // if (addingObj_component_ids[0].slice(-2) == "00") {
-          //      let k = 1;
-          //      let articles = articleDatabaseAry.filter((e) => {
-          //           return e.uniqueid.match(addingObj_component_ids[0].substring(0, addingObj_component_ids[0].length - 2));
-          //      });
-          //      articles.forEach((e) => {
-          //           document.querySelector('[data-uniqueid="' + e.uniqueid + '"]').click();
-          //      });
-          // } else {
           for (let i = 0; i < addingObj_component_ids.length; i++) {
                document.querySelector('[data-uniqueid="' + addingObj_component_ids[i] + '"]').click();
           }
-          // }
      }
 });
 departmentArea.addEventListener("click", (event) => {
      const component = event.target.closest(".department");
      if (component) {
           let departAs = departmentArea.querySelectorAll(".dropdown-item");
-          departAs.forEach((e) => {
-               e.classList.remove("selectedDepartment");
-          });
-          console.log(document.getElementById("department-title"));
+
+          // console.log(document.getElementById("department-title"));
           document.getElementById("department-title").innerText = "選取分科: " + component.dataset.department;
-          // component.classList.add("selectedDepartment");
           let packageDivs = packageArea.querySelectorAll(".component");
 
           packageDivs.forEach((e) => {
@@ -209,7 +306,7 @@ printBtn.addEventListener("click", () => {
      const printWindow = window.open("", "_blank");
      printWindow.document.write("<html><head><title>列印預覽</title></head><body>");
      printWindow.document.write(
-          '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ"	crossorigin="anonymous"/><link rel="stylesheet" href="style.css" /><link rel="stylesheet" href="style_print.css" />'
+          '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous"/><link rel="stylesheet" href="style.css" /><link rel="stylesheet" href="style_print.css" />'
      );
      printWindow.document.write(previewArea.outerHTML);
      printWindow.document.write("</body></html>");
@@ -229,20 +326,17 @@ function readInDatabase() {
      console.log("reading");
      // localStorage.clear();
      if (localStorage.articleDatabaseAry && localStorage.packageDatabaseAry && localStorage.departmentDatabaseAry) {
-          // console.log(localStorage.packageDatabaseAry);
           articleDatabaseAry = JSON.parse(localStorage.articleDatabaseAry);
           packageDatabaseAry = JSON.parse(localStorage.packageDatabaseAry);
           departmentDatabaseAry = JSON.parse(localStorage.departmentDatabaseAry);
           init();
-          // createArticleDatabase(articleDatabaseAry);
-          // createPackages(packageDatabaseAry);
      }
      fetch(dataSheetUrl)
           .then((res) => {
                return res.json();
           })
           .then((data) => {
-               console.log(data);
+               // console.log(data);
                let needToUpdate = false;
                if (
                     JSON.stringify(articleDatabaseAry) != JSON.stringify(data.data[0]) ||
@@ -264,28 +358,135 @@ function readInDatabase() {
 }
 
 function init() {
-     try {
-          let originalComponent = document.querySelector(".left-column").querySelectorAll(".component");
-          originalComponent.forEach((e) => {
-               e.remove();
-          });
-          departmentList.innerHTML = "";
-          createArticleDatabase(articleDatabaseAry);
-          createPackages(packageDatabaseAry);
-          createDepartments(departmentDatabaseAry);
-          const loader = document.querySelectorAll(".loader");
-          loader.forEach((e) => {
-               e.remove();
-          });
-     } catch (err) {
-          console.log("Err at line " + err.line + "\n " + err);
-          localStorage.clear();
+     let originalComponent = document.querySelector(".left-column").querySelectorAll(".component");
+     originalComponent.forEach((e) => {
+          e.remove();
+     });
+     departmentList.innerHTML = "";
+     clearTreeObj();
+     createArticleDatabase(articleDatabaseAry);
+     createPackages(packageDatabaseAry);
+     createDepartments(departmentDatabaseAry);
+
+     leftColumn.innerHTML = "";
+     creareArticleTreeComponent(articleTreeObj);
+     const loader = document.querySelectorAll(".loader");
+     loader.forEach((e) => {
+          e.remove();
+     });
+}
+
+function clearTreeObj() {
+     for (let i = 0; i < articleDatabaseAry.length; i++) {
+          let curArticle = articleDatabaseAry[i];
+          if (curArticle.department) {
+               if (!articleTreeObj.items[curArticle.department]) {
+                    articleTreeObj.items[curArticle.department] = { obj_title: curArticle.department, type: "folder", parent: articleTreeObj, items: {} };
+               }
+               let curDept = articleTreeObj.items[curArticle.department];
+               if (curArticle.main_category) {
+                    if (!curDept.items[curArticle.main_category]) {
+                         curDept.items[curArticle.main_category] = {
+                              obj_title: curArticle.main_category,
+                              type: "folder",
+                              parent: curDept,
+                              items: {},
+                         };
+                    }
+                    let curMainCategory = curDept.items[curArticle.main_category];
+                    if (curArticle.sub_category) {
+                         if (!curMainCategory.items[curArticle.sub_category]) {
+                              curMainCategory.items[curArticle.sub_category] = {
+                                   obj_title: curArticle.sub_category,
+                                   type: "folder",
+                                   parent: curMainCategory,
+                                   items: {},
+                              };
+                         }
+                         let curSubCategory = curMainCategory.items[curArticle.sub_category];
+
+                         // curSubCategory.items[curArticle.uniqueid] = {
+                         //      obj_title: articleTreeObj.items[curArticle.department].items[curArticle.main_category],
+                         //  parent: curSubCategory,
+                         //      type: "folder",
+                         //      items: {},
+                         // };
+                         curSubCategory.items[curArticle.uniqueid] = Object.create(curArticle);
+                         curSubCategory.items[curArticle.uniqueid].parent = curSubCategory;
+                         curSubCategory.items[curArticle.uniqueid].type = "article";
+                    } else {
+                         curMainCategory.items[curArticle.uniqueid] = Object.create(curArticle);
+                         curMainCategory.items[curArticle.uniqueid].parent = curMainCategory;
+                         curMainCategory.items[curArticle.uniqueid].type = "article";
+                    }
+               } else {
+                    curDept.items[curArticle.uniqueid] = Object.create(curArticle);
+                    curDept.items[curArticle.uniqueid].parent = curDept;
+                    curDept.items[curArticle.uniqueid].type = "article";
+               }
+          }
+     }
+     // console.log(articleTreeObj);
+     // console.log(Object.values(articleTreeObj));
+}
+
+function creareArticleTreeComponent(treeObj) {
+     if (treeObj.type == "folder") {
+          if (treeObj.parent != null) {
+               let treeObjEleID = treeObj.obj_title;
+               let tmpObj = treeObj;
+               let indexLevel = 0;
+               while (tmpObj.parent.parent != null) {
+                    treeObjEleID = tmpObj.parent.obj_title + "_" + treeObjEleID;
+                    tmpObj = tmpObj.parent;
+                    indexLevel++;
+               }
+
+               let folderDiveEle = document.createElement("div");
+               folderDiveEle.className = "accordion-item";
+               folderDiveEle.innerHTML =
+                    '    <strong class="accordion-header "> <button class="accordion-button p-2 ps-3 collapsed component" type="button" data-bs-toggle="collapse" data-bs-target="#' +
+                    treeObjEleID +
+                    '" aria-expanded="true" aria-controls="' +
+                    treeObjEleID +
+                    '" draggable=true data-type="folder" data-uniqueid="' +
+                    treeObjEleID +
+                    '"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-folder me-2" viewBox="0 0 16 16"> <path d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31zM2.19 4a1 1 0 0 0-.996 1.09l.637 7a1 1 0 0 0 .995.91h10.348a1 1 0 0 0 .995-.91l.637-7A1 1 0 0 0 13.81 4H2.19zm4.69-1.707A1 1 0 0 0 6.172 2H2.5a1 1 0 0 0-1 .981l.006.139C1.72 3.042 1.95 3 2.19 3h5.396l-.707-.707z"/></svg>' +
+                    treeObj.obj_title +
+                    '</button> </strong> <div id="' +
+                    treeObjEleID +
+                    '" class="accordion-collapse collapse"><div class="accordion-body p-0 ps-3 pb-4 pt-2"> </div>';
+
+               // let folderTitleEle = document.createElement("strong");
+               // folderTitleEle.innerText = treeObj.obj_title;
+               treeObj.folderEle = folderDiveEle.querySelector("div").querySelector("div");
+               // treeObj.folderEle.id = treeObjEleID;
+               treeObj.parent.folderEle.appendChild(folderDiveEle);
+               // treeObj.parent.folderEle.appendChild(treeObj.folderEle);
+          } else {
+               treeObj.folderEle = leftColumn;
+          }
+          for (let i = 0; i < Object.values(treeObj.items).length; i++) {
+               creareArticleTreeComponent(Object.values(treeObj.items)[i]);
+          }
+     } else if (treeObj.type == "article") {
+          let articleEle = document.createElement("div");
+          articleEle.classList = "component btn-component";
+          articleEle.innerHTML =
+               '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-card-text me-2 " viewBox="0 0 16 20">  <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>  <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>    </svg>' +
+               treeObj.title;
+
+          articleEle.draggable = true;
+          articleEle.title = treeObj.content;
+          articleEle.dataset.type = "article";
+          articleEle.dataset.uniqueid = treeObj.uniqueid;
+          articleEle.dataset.department = treeObj.department;
+          treeObj.parent.folderEle.appendChild(articleEle);
      }
 }
 
 function createDepartments(departmentData) {
      departmentData.forEach((element) => {
-          // console.log(element.department);
           let newDepartmentComponent = document.createElement("li");
           newDepartmentComponent.classList = "";
           departmentList.appendChild(newDepartmentComponent);
@@ -294,8 +495,6 @@ function createDepartments(departmentData) {
           newDepartmentTitle.classList = "dropdown-item department";
           newDepartmentTitle.innerText = element.department;
           newDepartmentComponent.appendChild(newDepartmentTitle);
-          // departmentList.appendChild(newdepartmentComponent);
-          // newdepartmentComponent.innerText = element.department_title;
           newDepartmentTitle.dataset.department = element.department;
      });
 }
@@ -332,8 +531,6 @@ function createPackages(packageData) {
                let newArticleTitle = document.createElement("h3");
                newArticleTitle.innerText = element.package_title;
                newPackageComponent.appendChild(newArticleTitle);
-               // packageArea.appendChild(newPackageComponent);
-               // newPackageComponent.innerText = element.package_title;
                newPackageComponent.dataset.package_title = element.package_title;
                newPackageComponent.dataset.department = element.department;
                let newPackageContent = document.createElement("p");
