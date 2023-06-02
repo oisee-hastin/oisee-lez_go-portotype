@@ -409,7 +409,7 @@ function readInDatabase() {
                localStorage.packageDatabaseAry = JSON.stringify(packageDatabaseAry);
                localStorage.departmentDatabaseAry = JSON.stringify(departmentDatabaseAry);
                if (needToUpdate) {
-                    init();
+                    // init();
                }
           });
 }
