@@ -92,8 +92,19 @@ function addComponentToPreview(component) {
 }
 
 function addArticleObjToPreview(articleObj) {
-     let newComponentEle = document.createElement("div");
+     let exsistPreviewItems = previewArea.querySelectorAll(".previewComponent");
+     let breakFunction = false;
+     exsistPreviewItems.forEach((e) => {
+          if (e.dataset.uniqueid == articleObj.uniqueid) {
+               breakFunction = true;
+               return;
+          }
+     });
+     if (breakFunction) {
+          return;
+     }
 
+     let newComponentEle = document.createElement("div");
      newComponentEle.classList = "component btn-component previewComponent";
      newComponentEle.title = articleObj.content;
      let newArticleTitle = document.createElement("h3");
@@ -209,37 +220,83 @@ const resetBtn = document.querySelector("#reset-btn");
 
 // 監聽文章元件點擊事件，將元件加入預覽區
 
+let dragedEle = null;
 leftColumn.addEventListener("dragstart", (e) => {
-     e.preventDefault();
+     // e.preventDefault();
      const componentEle = e.target.closest(".component");
+     dragedEle = componentEle;
+     console.log("dragStart");
+     // console.log(dragedEle);
+     // if (componentEle.dataset.type == "folder") {
+     //      let uniqueidAry = componentEle.dataset.uniqueid.split("_");
+     //      let folderObj = articleTreeObj;
+
+     //      console.log(uniqueidAry);
+     //      for (let i = 0; i < uniqueidAry.length; i++) {
+     //           console.log(folderObj);
+     //           folderObj = folderObj.items[uniqueidAry[i]];
+     //      }
+
+     //      addAricleFolderObj(folderObj);
+     //      function addAricleFolderObj(folderObj) {
+     //           Object.values(folderObj.items).forEach((e) => {
+     //                if (e.type == "article") {
+     //                     addArticleObjToPreview(e);
+     //                } else if (e.type == "folder") {
+     //                     addAricleFolderObj(e);
+     //                }
+     //           });
+     //      }
+     // } else if (componentEle.dataset.type == "article") {
+     //      let articleObj = articleDatabaseAry.find(function (e) {
+     //           return e.uniqueid == componentEle.dataset.uniqueid;
+     //      });
+     //      addArticleObjToPreview(articleObj);
+     // }
+});
+leftColumn.addEventListener("dragstend", (e) => {
+     dragedEle = null;
+     console.log("end");
+     // console.log(dragedEle);
+});
+
+previewArea.addEventListener("drop", (e) => {
+     e.preventDefault();
+     // console.log(e.target);
+     const componentEle = dragedEle;
      // console.log(e.target);
      // console.log(componentEle);
-     if (componentEle.dataset.type == "folder") {
-          let uniqueidAry = componentEle.dataset.uniqueid.split("_");
-          let folderObj = articleTreeObj;
 
-          console.log(uniqueidAry);
-          for (let i = 0; i < uniqueidAry.length; i++) {
-               console.log(folderObj);
-               folderObj = folderObj.items[uniqueidAry[i]];
-          }
+     // console.log(dragedEle);
+     if (dragedEle != null) {
+          if (componentEle.dataset.type == "folder") {
+               let uniqueidAry = componentEle.dataset.uniqueid.split("_");
+               let folderObj = articleTreeObj;
 
-          // console.log(folderObj);
-          addAricleFolderObj(folderObj);
-          function addAricleFolderObj(folderObj) {
-               Object.values(folderObj.items).forEach((e) => {
-                    if (e.type == "article") {
-                         addArticleObjToPreview(e);
-                    } else if (e.type == "folder") {
-                         addAricleFolderObj(e);
-                    }
+               // console.log(uniqueidAry);
+               for (let i = 0; i < uniqueidAry.length; i++) {
+                    // console.log(folderObj);
+                    folderObj = folderObj.items[uniqueidAry[i]];
+               }
+
+               // console.log(folderObj);
+               addAricleFolderObj(folderObj);
+               function addAricleFolderObj(folderObj) {
+                    Object.values(folderObj.items).forEach((e) => {
+                         if (e.type == "article") {
+                              addArticleObjToPreview(e);
+                         } else if (e.type == "folder") {
+                              addAricleFolderObj(e);
+                         }
+                    });
+               }
+          } else if (componentEle.dataset.type == "article") {
+               let articleObj = articleDatabaseAry.find(function (e) {
+                    return e.uniqueid == componentEle.dataset.uniqueid;
                });
+               addArticleObjToPreview(articleObj);
           }
-     } else if (componentEle.dataset.type == "article") {
-          let articleObj = articleDatabaseAry.find(function (e) {
-               return e.uniqueid == componentEle.dataset.uniqueid;
-          });
-          addArticleObjToPreview(articleObj);
+          dragedEle = null;
      }
 });
 
@@ -565,15 +622,17 @@ function createArticleDatabase(articleData) {
 
 const initSortableList = (e) => {
      e.preventDefault();
-     const draggingItem = document.querySelector(".dragging");
-     // Getting all items except currently dragging and making array of them
-     let siblings = [...previewArea.querySelectorAll(".previewComponent:not(.dragging)")];
-     // Finding the sibling after which the dragging item should be placed
-     let nextSibling = siblings.find((sibling) => {
-          return document.querySelector(".right-container").scrollTop / scaleFactor + e.clientY <= sibling.offsetTop + sibling.offsetHeight / 2;
-     });
-     // Inserting the dragging item before the found sibling
-     previewArea.insertBefore(draggingItem, nextSibling);
+     if (dragedEle == null) {
+          const draggingItem = document.querySelector(".dragging");
+          // Getting all items except currently dragging and making array of them
+          let siblings = [...previewArea.querySelectorAll(".previewComponent:not(.dragging)")];
+          // Finding the sibling after which the dragging item should be placed
+          let nextSibling = siblings.find((sibling) => {
+               return document.querySelector(".right-container").scrollTop / scaleFactor + e.clientY <= sibling.offsetTop + sibling.offsetHeight / 2;
+          });
+          // Inserting the dragging item before the found sibling
+          previewArea.insertBefore(draggingItem, nextSibling);
+     }
 };
 previewArea.addEventListener("dragover", initSortableList);
 previewArea.addEventListener("dragenter", (e) => e.preventDefault());
