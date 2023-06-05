@@ -431,6 +431,7 @@ function init() {
      loader.forEach((e) => {
           e.remove();
      });
+     document.querySelector("[data-bs-target='#風免']").click();
 }
 
 function clearTreeObj() {
@@ -502,7 +503,7 @@ function creareArticleTreeComponent(treeObj) {
                let folderDiveEle = document.createElement("div");
                folderDiveEle.className = "accordion-item";
                folderDiveEle.innerHTML =
-                    '    <strong class="accordion-header "> <button class="accordion-button p-2 ps-3 collapsed component" type="button" data-bs-toggle="collapse" data-bs-target="#' +
+                    '    <strong class="accordion-header "> <button class="accordion-button p-2 ps-4 collapsed component" type="button" data-bs-toggle="collapse" data-bs-target="#' +
                     treeObjEleID +
                     '" aria-expanded="true" aria-controls="' +
                     treeObjEleID +
