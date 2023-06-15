@@ -382,11 +382,14 @@ document.addEventListener("DOMContentLoaded", readInDatabase);
 function readInDatabase() {
      console.log("reading");
      // localStorage.clear();
+     let needToUpdate = false;
      if (localStorage.articleDatabaseAry && localStorage.packageDatabaseAry && localStorage.departmentDatabaseAry) {
           articleDatabaseAry = JSON.parse(localStorage.articleDatabaseAry);
           packageDatabaseAry = JSON.parse(localStorage.packageDatabaseAry);
           departmentDatabaseAry = JSON.parse(localStorage.departmentDatabaseAry);
           init();
+     } else {
+          needToUpdate = true;
      }
      fetch(dataSheetUrl)
           .then((res) => {
@@ -394,22 +397,23 @@ function readInDatabase() {
           })
           .then((data) => {
                // console.log(data);
-               let needToUpdate = false;
+
                if (
                     JSON.stringify(articleDatabaseAry) != JSON.stringify(data.data[0]) ||
                     JSON.stringify(packageDatabaseAry) != JSON.stringify(data.data[1]) ||
                     JSON.stringify(departmentDatabaseAry) != JSON.stringify(data.data[2])
                ) {
-                    needToUpdate = true;
+                    // needToUpdate = true;
                }
                articleDatabaseAry = data.data[0];
                packageDatabaseAry = data.data[1];
                departmentDatabaseAry = data.data[2];
+
                localStorage.articleDatabaseAry = JSON.stringify(articleDatabaseAry);
                localStorage.packageDatabaseAry = JSON.stringify(packageDatabaseAry);
                localStorage.departmentDatabaseAry = JSON.stringify(departmentDatabaseAry);
                if (needToUpdate) {
-                    // init();
+                    init();
                }
           });
 }
